@@ -25,10 +25,11 @@ mycursor = mydb.cursor()
 
 class TodoDAO(object):
     def __init__(self):
+        self.todos = []
         mycursor.execute("SELECT id FROM tasks ORDER BY ID DESC LIMIT 1")
         for i in mycursor:
             self.counter=i[0];
-        self.todos = []
+        
 
     def get(self, id):
         '''for todo in self.todos:
@@ -49,18 +50,18 @@ class TodoDAO(object):
         insert_stmnt=("INSERT INTO TASKS VALUES (%s,%s,%s,%s)")
         val=(todo['id'],todo['task'],todo['due date'],todo['status'])
         mycursor.execute(insert_stmnt,val)
-        mydb.commit()
+        #mydb.commit()
         self.todos.append(todo)
         return todo
-
+    @ns.marshal_with(todo)
     def update(self, id, data):
-        todo = self.get(id)
-        todo.update(data)
+        todo=data
         insert_stmnt=("UPDATE TASKS SET tasks=%s,due_date=%s,status=%s WHERE id=%s")
-        val=(data['task'],data['due date'],data['status'],todo['id'])
-        mydb.commit()
-    
+        val=(data['task'],data['due date'],data['status'],id)
+        mycursor.execute(insert_stmnt,val)
+        #mydb.commit()
         return todo
+        
     
 
     def delete(self, id):
@@ -149,7 +150,7 @@ class statusCheckOverdue(Resource):
     
 @ns.route('/<string:due_date>')
 @ns.response(404, 'Todo not found')
-@ns.param('due_date', 'The task identifier')
+@ns.param('due_date', 'The due date of the task')
 class dueDate(Resource):
     '''this gets a list of tasks which are due to be finished on that specified date'''
     def get(self,due_date):
